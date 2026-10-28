@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="FlowSnap turns long study text into editable, source-aware flowcharts. Runs in your browser.">
+  <meta name="theme-color" content="#f7f8fc">
+  <title>FlowSnap — Text to flowchart</title>
+  <link rel="stylesheet" href="styles.css?v=9">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js" defer></script>
+  <script src="app.js?v=9" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="FlowSnap home"><span class="brand-mark">↗</span><span>FlowSnap</span><span class="version">MVP</span></a>
+    <div class="top-actions">
+      <span class="privacy"><span class="privacy-dot"></span> Processed in your browser</span>
+      <button id="saveJson" class="button button-quiet" disabled>Save project</button>
+      <button id="exportSvg" class="button button-primary" disabled>Export SVG</button>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="intro">
+      <div class="eyebrow">FROM LONG TEXT TO CLEAR THINKING</div>
+      <h1>Make the important points <span>visible.</span></h1>
+      <p>Turn study notes, textbook sections, and research papers into editable flowcharts. Review every point against its source.</p>
+    </section>
+
+    <section class="workspace">
+      <aside class="source-panel panel">
+        <div class="panel-heading">
+          <div><span class="step-number">01</span><h2>Your source</h2></div>
+          <span class="subtle-label">LOCAL</span>
+        </div>
+        <label for="sourceText" class="field-label">Paste text or upload a document</label>
+        <textarea id="sourceText" placeholder="Paste a textbook section, lecture notes, or a research-paper excerpt here…"></textarea>
+        <div class="upload-row">
+          <label class="button button-outline upload-button" for="fileInput">↑ Upload file</label>
+          <input id="fileInput" type="file" accept=".txt,.md,.pdf,.docx">
+          <span id="fileName" class="file-name">TXT · PDF · DOCX</span>
+        </div>
+        <div class="settings-block">
+          <div class="field-label">Diagram detail</div>
+          <div class="segmented" role="group" aria-label="Diagram detail">
+            <button data-detail="overview">Overview</button>
+            <button data-detail="balanced">Balanced</button>
+            <button data-detail="detailed" class="active">Detailed</button>
+          </div>
+          <div class="field-label field-label-spaced">Diagram style</div>
+          <select id="diagramStyle">
+            <option value="process">Process flow</option>
+            <option value="concept">Concept map</option>
+            <option value="hierarchy">Topic hierarchy</option>
+          </select>
+        </div>
+        <button id="generate" class="button button-primary button-wide">Generate flowchart <span>→</span></button>
+        <p class="small-note">No account or API key. Text stays on this device. Scanned PDFs need OCR and aren't supported in this first version.</p>
+        <div id="status" class="status" role="status" aria-live="polite">Ready when you are.</div>
+      </aside>
+
+      <section class="canvas-panel panel">
+        <div class="canvas-toolbar">
+          <div>
+            <span class="step-number">02</span><h2>Your flowchart</h2>
+            <span id="nodeCount" class="count-pill">No diagram yet</span>
+          </div>
+          <div class="canvas-actions">
+            <button id="connectMode" class="button button-quiet" disabled>＋ Connect nodes</button>
+            <button id="addNode" class="button button-quiet" disabled>＋ Add node</button>
+            <button id="exportPng" class="button button-quiet" disabled>Export PNG</button>
+            <label class="button button-quiet import-project" for="projectInput">Open project</label>
+            <input id="projectInput" type="file" accept=".json,application/json">
+          </div>
+        </div>
+        <div class="canvas-wrap" id="canvasWrap">
+          <div id="emptyState" class="empty-state">
+            <div class="empty-icon">⌘</div>
+            <h3>Your ideas will take shape here</h3>
+            <p>Paste a passage or upload a document, then generate your first diagram.</p>
+            <button id="loadExample" class="text-button">Try a sample about photosynthesis ↗</button>
+          </div>
+          <svg id="diagram" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Editable flowchart canvas" hidden>
+            <defs><marker id="arrowhead" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0, 9 3.5, 0 7" fill="#98a2b3"/></marker></defs>
+            <g id="edgesLayer"></g><g id="nodesLayer"></g>
+          </svg>
+        </div>
+        <div class="canvas-footer">
+          <span>Tip: click a node to select and edit · drag to rearrange</span>
+          <span id="connectHint"></span>
+        </div>
+      </section>
+
+      <aside class="inspector-panel panel">
+        <div class="panel-heading">
+          <div><span class="step-number">03</span><h2>Inspect & edit</h2></div>
+        </div>
+        <div id="inspectorEmpty" class="inspector-empty">
+          <div class="inspector-symbol">✳</div>
+          <h3>Select a node</h3>
+          <p>Edit its wording, change its type, and inspect the original source passage.</p>
+        </div>
+        <div id="inspectorForm" hidden>
+          <label class="field-label" for="nodeTitle">Node title</label>
+          <input id="nodeTitle" type="text" maxlength="120">
+          <label class="field-label" for="nodeSummary">Supporting detail</label>
+          <textarea id="nodeSummary" class="summary-input" rows="4"></textarea>
+          <label class="field-label" for="nodeType">Node type</label>
+          <select id="nodeType">
+            <option value="concept">Concept</option><option value="process">Process / step</option>
+            <option value="condition">Condition</option><option value="exception">Exception</option>
+            <option value="equation">Equation</option><option value="outcome">Outcome</option>
+          </select>
+          <div class="source-card">
+            <div class="source-card-heading"><span>Source excerpt</span><span id="sourcePage"></span></div>
+            <p id="sourceExcerpt">No source excerpt available.</p>
+          </div>
+          <button id="deleteNode" class="button button-danger button-wide">Delete selected node</button>
+        </div>
+        <div class="inspector-bottom">
+          <div class="legend-item"><span class="legend-dot concept"></span>Concept</div>
+          <div class="legend-item"><span class="legend-dot process"></span>Step</div>
+          <div class="legend-item"><span class="legend-dot condition"></span>Condition</div>
+          <div class="legend-item"><span class="legend-dot exception"></span>Exception</div>
+        </div>
+      </aside>
+    </section>
+    <footer class="page-footer">
+      <span>FlowSnap is an open-source study aid. Always verify extracted relationships against your source.</span>
+      <span>Built for curious minds · <a href="https://github.com" target="_blank" rel="noreferrer">GitHub</a></span>
+    </footer>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
