@@ -1,0 +1,13 @@
+Photosynthesis
+
+Photosynthesis is the process by which plants convert light energy into chemical energy.
+
+Chlorophyll in chloroplasts absorbs light energy. The light-dependent reactions use this energy to split water, releasing oxygen and producing ATP and NADPH.
+
+The Calvin cycle uses ATP and NADPH to fix carbon dioxide into organic molecules. The process occurs in the stroma of chloroplasts.
+
+If light is unavailable, the light-dependent reactions cannot continuously produce ATP and NADPH. The Calvin cycle depends on these products, although its individual reactions do not directly require photons.
+
+Factors affecting the rate include light intensity, carbon dioxide concentration, and temperature. Increasing light intensity can increase the rate only up to a saturation point. Very high temperatures may reduce the rate because photosynthetic enzymes can lose activity.
+
+Overall, photosynthesis stores energy in organic compounds and supports most food chains.
